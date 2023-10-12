@@ -85,4 +85,28 @@ final class parser_tests: XCTestCase {
             checkLiteralExpression(exp: returnStmt.value, v: e.1)
         }
     }
+    
+    func testIdentifierExpession() {
+        let input = "foobar;"
+        
+        let l = Lexer(input: input)
+        let p = Parser(lexer: l)
+        let program = p.parseProgram()
+        checkParserErrors(p: p)
+        
+        XCTAssertEqual(program.statements.count, 1)
+        
+        guard let stmt = program.statements.first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+
+        guard let ident = stmt.expression as? Identifier else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(ident.value, "foobar")
+        XCTAssertEqual(ident.tokenLiteral(), "foobar")
+    }
 }
