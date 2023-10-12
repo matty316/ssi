@@ -60,4 +60,29 @@ final class parser_tests: XCTestCase {
             }
         }
     }
+    
+    func testReturnStatement() {
+        let expected: [(String, Any)] = [
+            ("return 5;", 5),
+            ("return true;", true),
+            ("return foobar;", "foobar"),
+        ]
+        
+        for e in expected {
+            let l = Lexer(input: e.0)
+            let p = Parser(lexer: l)
+            let program = p.parseProgram()
+            checkParserErrors(p: p)
+            
+            XCTAssertEqual(program.statements.count, 1)
+            
+            guard let returnStmt = program.statements.first as? ReturnStatement else {
+                XCTFail()
+                return
+            }
+            
+            XCTAssertEqual(returnStmt.tokenLiteral(), "return")
+            checkLiteralExpression(exp: returnStmt.value, v: e.1)
+        }
+    }
 }

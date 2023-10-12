@@ -110,6 +110,8 @@ class Parser {
         switch currentToken.tokenType {
         case .letToken:
             return parseLetStatement()
+        case .returnToken:
+            return parseReturnStatement()
         default:
             return nil
         }
@@ -137,6 +139,20 @@ class Parser {
         }
         
         return LetStatement(token: token, name: name, value: value)
+    }
+    
+    func parseReturnStatement() -> ReturnStatement? {
+        let token = currentToken
+        
+        nextToken()
+        
+        let value = parseExpression(precedence: .lowest)
+        
+        if peekTokenIs(.semicolon) {
+            nextToken()
+        }
+        
+        return ReturnStatement(token: token, value: value)
     }
     
     func parseExpression(precedence: Precedence) -> Expression? {
