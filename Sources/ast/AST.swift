@@ -127,15 +127,15 @@ struct BooleanExpression: Expression {
 
 struct IfExpression: Expression {
     var token: Token
-    var condition: Expression
-    var consequence: BlockStatement
+    var condition: Expression?
+    var consequence: BlockStatement?
     var alternative: BlockStatement?
     
     func string() -> String {
         if let alternative = alternative {
-            return "if \(condition.string()) \(consequence.string()) else \(alternative.string())"
+            return "if \(condition?.string() ?? "") \(consequence?.string() ?? "") else \(alternative.string())"
         }
-        return "if \(condition.string()) \(consequence.string())"
+        return "if \(condition?.string() ?? "") \(consequence?.string() ?? "")"
     }
 }
 
@@ -150,12 +150,12 @@ struct BlockStatement: Statement {
 
 struct FunctionLiteral: Expression {
     var token: Token
-    var params: [Identifier]
-    var body: BlockStatement
+    var params: [Identifier]?
+    var body: BlockStatement?
     
     func string() -> String {
-        let paramsString = params.map { $0.string() }.joined(separator: ", ")
-        return "\(tokenLiteral())(\(paramsString))\(body.string())"
+        let paramsString = params?.map { $0.string() }.joined(separator: ", ")
+        return "\(tokenLiteral())(\(paramsString ?? ""))\(body?.string() ?? "")"
     }
 }
 

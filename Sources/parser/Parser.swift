@@ -45,6 +45,8 @@ class Parser {
         self.prefixParseFns[.bang] = parsePrefixExpression
         self.prefixParseFns[.minus] = parsePrefixExpression
         self.prefixParseFns[.lParen] = parseGroupedExpression
+        self.prefixParseFns[.ifToken] = parseIfExpression
+        self.prefixParseFns[.fnToken] = parseFunctionLiteral
         
         self.infixParseFns[.plus] = parseInfixExpression
         self.infixParseFns[.minus] = parseInfixExpression
@@ -251,5 +253,100 @@ class Parser {
         }
         
         return exp
+    }
+    
+    func parseIfExpression() -> Expression? {
+        let token = currentToken
+        
+        if !expectPeek(.lParen) {
+            return nil
+        }
+        
+        nextToken()
+        let condition = parseExpression(precedence: .lowest)
+        
+        if !expectPeek(.rParen) {
+            return nil
+        }
+        
+        if !expectPeek(.lBrace) {
+            return nil
+        }
+        
+        let consequence = parseBlockStatement()
+        
+        var alternative: BlockStatement? = nil
+        if peekTokenIs(.elseToken) {
+            nextToken()
+            
+            if !expectPeek(.lBrace) {
+                return nil
+            }
+            
+            alternative = parseBlockStatement()
+        }
+        
+        return IfExpression(token: token, condition: condition, consequence: consequence, alternative: alternative)
+    }
+    
+    func parseBlockStatement() -> BlockStatement? {
+        let token = currentToken
+        var statements = [Statement]()
+        
+        nextToken()
+        
+        while !currentTokenIs(.rBrace) && !currentTokenIs(.eof) {
+            if let stmt = parseStatement() {
+                statements.append(stmt)
+            }
+            nextToken()
+        }
+        
+        return BlockStatement(token: token, statements: statements)
+    }
+    
+    func parseFunctionLiteral() -> Expression? {
+        let token = currentToken
+        
+        if !expectPeek(.lParen) {
+            return nil
+        }
+        
+        let params = parseFunctionParams()
+        
+        if !expectPeek(.lBrace) {
+            return nil
+        }
+        
+        let body = parseBlockStatement()
+        
+        return FunctionLiteral(token: token, params: params, body: body)
+    }
+    
+    func parseFunctionParams() -> [Identifier]? {
+        var ids = [Identifier]()
+        
+        if peekTokenIs(.rParen) {
+            nextToken()
+            return ids
+        }
+        nextToken()
+        
+        let id = Identifier(token: currentToken, value: currentToken.literal)
+        ids.append(id)
+        
+        while peekTokenIs(.comma) {
+            nextToken()
+            nextToken()
+            
+            let ident = Identifier(token: currentToken, value: currentToken.literal)
+            ids.append(ident)
+        }
+        
+        if !expectPeek(.rParen) {
+            return nil
+        }
+        
+        return ids
     }
 }

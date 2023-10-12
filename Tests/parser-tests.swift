@@ -59,6 +59,17 @@ final class parser_tests: XCTestCase {
         checkLiteralExpression(exp: opExp.right, v: right)
     }
     
+    func checkIdentifier(exp: Expression?, value: String) {
+        guard let ident = exp as? Identifier else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(ident.value, value)
+        XCTAssertEqual(ident.tokenLiteral(), value)
+
+    }
+    
     func testLetStatement() {
         let expected: [(String, String, Any)] = [
             ("let x = 5;", "x", 5),
@@ -318,6 +329,87 @@ final class parser_tests: XCTestCase {
             }
             
             XCTAssertEqual(boolean.value, e.1)
+        }
+    }
+    
+    func testIfExpression() {
+        let input = "if (x < y) { x }"
+        guard let stmt = setup(input: input).first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+        
+        guard let exp = stmt.expression as? IfExpression else {
+            XCTFail()
+            return
+        }
+        
+        checkInfixExpressing(exp: exp.condition, left: "x", op: "<", right: "y")
+        XCTAssertEqual(exp.consequence?.statements.count, 1)
+        
+        guard let consequence = exp.consequence?.statements.first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+        
+        checkIdentifier(exp: consequence.expression, value: "x")
+        
+        XCTAssertNil(exp.alternative)
+    }
+    
+    func testFunctionLiteralParsing() {
+        let input = "fn(x, y) { x + y }"
+        
+        guard let stmt = setup(input: input).first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+        
+        guard let function = stmt.expression as? FunctionLiteral else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(function.params?.count, 2)
+        
+        checkLiteralExpression(exp: function.params?[0], v: "x")
+        checkLiteralExpression(exp: function.params?[1], v: "y")
+
+        XCTAssertEqual(function.body?.statements.count, 1)
+        
+        guard let bodyStmt = function.body?.statements.first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+        
+        checkInfixExpressing(exp: bodyStmt.expression, left: "x", op: "+", right: "y")
+    }
+    
+    func testFunctionParamParsing() {
+        let expected: [(String, [String])] = [
+            ("fn() {};", []),
+            ("fn(x) {};", ["x"]),
+            ("fn(x, y, z) {};", ["x", "y", "z"]),
+        ]
+        
+        for e in expected {
+            let l = Lexer(input: e.0)
+            let p = Parser(lexer: l)
+            let program = p.parseProgram()
+            
+            checkParserErrors(p: p)
+            
+            guard let stmt = program.statements.first as? ExpressionStatement, let function = stmt.expression as? FunctionLiteral else {
+                XCTFail()
+                return
+            }
+            
+            XCTAssertEqual(function.params?.count, e.1.count)
+            
+            
+            for (i, id) in e.1.enumerated() {
+                checkLiteralExpression(exp: function.params?[i], v: id)
+            }
         }
     }
 }
