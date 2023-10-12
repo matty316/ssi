@@ -183,4 +183,141 @@ final class parser_tests: XCTestCase {
             checkInfixExpressing(exp: stmt.expression, left: e.1, op: e.2, right: e.3)
         }
     }
+    
+    func testOperatorPrecedenceParsing() {
+        let expected: [(String, String)] = [
+            (
+                "-a * b",
+                "((-a) * b)"
+            ),
+            (
+                "!-a",
+                "(!(-a))"
+            ),
+            (
+                "a + b + c",
+                "((a + b) + c)"
+            ),
+            (
+                "a + b - c",
+                "((a + b) - c)"
+            ),
+            (
+                "a * b * c",
+                "((a * b) * c)"
+            ),
+            (
+                "a * b / c",
+                "((a * b) / c)"
+            ),
+            (
+                "a + b / c",
+                "(a + (b / c))"
+            ),
+            (
+                "a + b * c + d / e - f",
+                "(((a + (b * c)) + (d / e)) - f)"
+            ),
+            (
+                "3 + 4; -5 * 5",
+                "(3 + 4)((-5) * 5)"
+            ),
+            (
+                "5 > 4 == 3 < 4",
+                "((5 > 4) == (3 < 4))"
+            ),
+            (
+                "5 < 4 != 3 > 4",
+                "((5 < 4) != (3 > 4))"
+            ),
+            (
+                "3 + 4 * 5 == 3 * 1 + 4 * 5",
+                "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
+            ),
+            (
+                "true",
+                "true"
+            ),
+            (
+                "false",
+                "false"
+            ),
+            (
+                "3 > 5 == false",
+                "((3 > 5) == false)"
+            ),
+            (
+                "3 < 5 == true",
+                "((3 < 5) == true)"
+            ),
+            (
+                "1 + (2 + 3) + 4",
+                "((1 + (2 + 3)) + 4)"
+            ),
+            (
+                "(5 + 5) * 2",
+                "((5 + 5) * 2)"
+            ),
+            (
+                "2 / (5 + 5)",
+                "(2 / (5 + 5))"
+            ),
+            (
+                "(5 + 5) * 2 * (5 + 5)",
+                "(((5 + 5) * 2) * (5 + 5))"
+            ),
+            (
+                "-(5 + 5)",
+                "(-(5 + 5))"
+            ),
+            (
+                "!(true == true)",
+                "(!(true == true))"
+            ),
+            (
+                "a + add(b * c) + d",
+                "((a + add((b * c))) + d)"
+            ),
+            (
+                "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+                "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"
+            ),
+            (
+                "add(a + b + c * d / f + g)",
+                "add((((a + b) + ((c * d) / f)) + g))"
+            )
+        ]
+        
+        for e in expected {
+            let l = Lexer(input: e.0)
+            let p = Parser(lexer: l)
+            let program = p.parseProgram()
+            
+            checkParserErrors(p: p)
+            
+            let actual = program.string()
+            XCTAssertEqual(actual, e.1)
+        }
+    }
+    
+    func testBooleanExpression() {
+        let expected: [(String, Bool)] = [
+            ("true;", true),
+            ("false;", false),
+        ]
+        
+        for e in expected {
+            guard let stmt = setup(input: e.0).first as? ExpressionStatement else {
+                XCTFail()
+                return
+            }
+            
+            guard let boolean = stmt.expression as? BooleanExpression else {
+                XCTFail()
+                return
+            }
+            
+            XCTAssertEqual(boolean.value, e.1)
+        }
+    }
 }

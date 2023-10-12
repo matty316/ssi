@@ -44,6 +44,7 @@ class Parser {
         self.prefixParseFns[.falseToken] = parseBoolean
         self.prefixParseFns[.bang] = parsePrefixExpression
         self.prefixParseFns[.minus] = parsePrefixExpression
+        self.prefixParseFns[.lParen] = parseGroupedExpression
         
         self.infixParseFns[.plus] = parseInfixExpression
         self.infixParseFns[.minus] = parseInfixExpression
@@ -238,5 +239,17 @@ class Parser {
         let right = parseExpression(precedence: Precedence(rawValue: precedence) ?? .lowest)
         
         return InfixExpresion(token: token, left: left, operatorString: op, right: right)
+    }
+    
+    func parseGroupedExpression() -> Expression? {
+        nextToken()
+        
+        let exp = parseExpression(precedence: .lowest)
+        
+        if !expectPeek(.rParen) {
+            return nil
+        }
+        
+        return exp
     }
 }
