@@ -8,7 +8,13 @@
 import Foundation
 
 enum Precedence: Int {
-    case lowest, equals, lessGreater, sum, product, prefix, call
+    case lowest = 0
+    case equals = 1
+    case lessGreater = 2
+    case sum = 3
+    case product = 4
+    case prefix = 5
+    case call = 6
 }
 
 class Parser {
@@ -187,7 +193,7 @@ class Parser {
             noPrefixParseFnError(currentToken.tokenType)
             return nil
         }
-        
+                
         var left = prefix()
         
         while !peekTokenIs(.semicolon) && precedence.rawValue < peekPrecedence() {

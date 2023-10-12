@@ -11,22 +11,19 @@ class Lexer {
     let input: String
     var position: String.Index
     var readPosition: String.Index
-    var char: Character
+    var char: Character = "\0"
     
     init(input: String) {
         self.input = input
         self.position = input.startIndex
-        self.readPosition = input.index(after: input.startIndex)
-        if let firstChar = input.first {
-            self.char = firstChar
-        } else {
-            self.char = "\0"
-        }
+        self.readPosition = input.startIndex
+        self.readChar()
     }
     
     func readChar() {
-        if readPosition >= input.endIndex {
+        if readPosition == input.endIndex {
             char = "\0"
+            position = input.endIndex
         } else {
             char = input[readPosition]
             position = readPosition
@@ -128,7 +125,7 @@ class Lexer {
     }
     
     func isLetter(char: Character) -> Bool {
-        return char.isLetter || char == "_"
+        return "a" <= char && char <= "z" || "A" <= char && char <= "Z" || char == "_"
     }
     
     func readNumber() -> String {
