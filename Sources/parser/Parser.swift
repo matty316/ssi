@@ -42,6 +42,17 @@ class Parser {
         self.prefixParseFns[.int] = parseIntegerLiteral
         self.prefixParseFns[.trueToken] = parseBoolean
         self.prefixParseFns[.falseToken] = parseBoolean
+        self.prefixParseFns[.bang] = parsePrefixExpression
+        self.prefixParseFns[.minus] = parsePrefixExpression
+        
+        self.infixParseFns[.plus] = parseInfixExpression
+        self.infixParseFns[.minus] = parseInfixExpression
+        self.infixParseFns[.asterisk] = parseInfixExpression
+        self.infixParseFns[.slash] = parseInfixExpression
+        self.infixParseFns[.lt] = parseInfixExpression
+        self.infixParseFns[.gt] = parseInfixExpression
+        self.infixParseFns[.eq] = parseInfixExpression
+        self.infixParseFns[.notEq] = parseInfixExpression
     }
     
     func currentTokenIs(_ type: Token.TokenType) -> Bool {
@@ -205,5 +216,27 @@ class Parser {
     
     func parseBoolean() -> Expression? {
         return BooleanExpression(token: currentToken, value: currentTokenIs(.trueToken))
+    }
+    
+    func parsePrefixExpression() -> Expression? {
+        let token = currentToken
+        let op = currentToken.literal
+        
+        nextToken()
+        
+        let right = parseExpression(precedence: .prefix)
+        
+        return PrefixExpression(token: token, operatorString: op, right: right)
+    }
+    
+    func parseInfixExpression(left: Expression?) -> Expression? {
+        let token = currentToken
+        let op = currentToken.literal
+        
+        let precedence = currentPrecedence()
+        nextToken()
+        let right = parseExpression(precedence: Precedence(rawValue: precedence) ?? .lowest)
+        
+        return InfixExpresion(token: token, left: left, operatorString: op, right: right)
     }
 }

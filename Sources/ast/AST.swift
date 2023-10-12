@@ -102,21 +102,21 @@ struct IntegerLiteral: Expression {
 struct PrefixExpression: Expression {
     var token: Token
     var operatorString: String
-    var right: Expression
+    var right: Expression?
     
     func string() -> String {
-        return "(\(operatorString)\(right.string()))"
+        return "(\(operatorString)\(right?.string() ?? ""))"
     }
 }
 
 struct InfixExpresion: Expression {
     var token: Token
-    var left: Expression
+    var left: Expression?
     var operatorString: String
-    var right: Expression
+    var right: Expression?
     
     func string() -> String {
-        return "(\(left.string()) \(operatorString) \(right.string()))"
+        return "(\(left?.string() ?? "") \(operatorString) \(right?.string() ?? ""))"
     }
 }
 

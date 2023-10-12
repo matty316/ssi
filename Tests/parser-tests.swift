@@ -48,6 +48,17 @@ final class parser_tests: XCTestCase {
         }
     }
     
+    func checkInfixExpressing(exp: Expression?, left: Any, op: String, right: Any) {
+        guard let opExp = exp as? InfixExpresion else {
+            XCTFail()
+            return
+        }
+        
+        checkLiteralExpression(exp: opExp.left, v: left)
+        XCTAssertEqual(opExp.operatorString, op)
+        checkLiteralExpression(exp: opExp.right, v: right)
+    }
+    
     func testLetStatement() {
         let expected: [(String, String, Any)] = [
             ("let x = 5;", "x", 5),
@@ -112,5 +123,64 @@ final class parser_tests: XCTestCase {
         
         XCTAssertEqual(lit.value, 5)
         XCTAssertEqual(lit.tokenLiteral(), "5")
+    }
+    
+    func testParsingPrefixExpression() {
+        let expected: [(String, String, Any)] = [
+            ("!5;", "!", 5),
+            ("-15;", "-", 15),
+            ("!foobar;", "!", "foobar"),
+            ("-foobar;", "-", "foobar"),
+            ("!true;", "!", true),
+            ("!false;", "!", false),
+        ]
+        
+        for e in expected {
+            guard let stmt = setup(input: e.0).first as? ExpressionStatement else {
+                XCTFail()
+                return
+            }
+            
+            guard let exp = stmt.expression as? PrefixExpression else {
+                XCTFail()
+                return
+            }
+            
+            XCTAssertEqual(exp.operatorString, e.1)
+            checkLiteralExpression(exp: exp.right, v: e.2)
+        }
+    }
+    
+    func testParsingInfixExpression() {
+        let expected: [(String, Any, String, Any)] = [
+            ("5 + 5;", 5, "+", 5),
+            ("5 - 5;", 5, "-", 5),
+            ("5 * 5;", 5, "*", 5),
+            ("5 / 5;", 5, "/", 5),
+            ("5 > 5;", 5, ">", 5),
+            ("5 < 5;", 5, "<", 5),
+            ("5 == 5;", 5, "==", 5),
+            ("5 != 5;", 5, "!=", 5),
+            ("foobar + barfoo;", "foobar", "+", "barfoo"),
+            ("foobar - barfoo;", "foobar", "-", "barfoo"),
+            ("foobar * barfoo;", "foobar", "*", "barfoo"),
+            ("foobar / barfoo;", "foobar", "/", "barfoo"),
+            ("foobar > barfoo;", "foobar", ">", "barfoo"),
+            ("foobar < barfoo;", "foobar", "<", "barfoo"),
+            ("foobar == barfoo;", "foobar", "==", "barfoo"),
+            ("foobar != barfoo;", "foobar", "!=", "barfoo"),
+            ("true == true", true, "==", true),
+            ("true != false", true, "!=", false),
+            ("false == false", false, "==", false),
+        ]
+        
+        for e in expected {
+            guard let stmt = setup(input: e.0).first as? ExpressionStatement else {
+                XCTFail()
+                return
+            }
+            
+            checkInfixExpressing(exp: stmt.expression, left: e.1, op: e.2, right: e.3)
+        }
     }
 }
