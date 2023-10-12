@@ -10,6 +10,17 @@ import XCTest
 
 final class parser_tests: XCTestCase {
     
+    func setup(input: String) -> [Statement] {
+        let l = Lexer(input: input)
+        let p = Parser(lexer: l)
+        let program = p.parseProgram()
+        
+        checkParserErrors(p: p)
+        XCTAssertEqual(program.statements.count, 1)
+        
+        return program.statements
+    }
+    
     func checkParserErrors(p: Parser) {
         if p.errors.isEmpty {
             return
@@ -45,14 +56,7 @@ final class parser_tests: XCTestCase {
         ]
         
         for e in expected {
-            let l = Lexer(input: e.0)
-            let p = Parser(lexer: l)
-            let program = p.parseProgram()
-            
-            checkParserErrors(p: p)
-            
-            XCTAssertEqual(program.statements.count, 1)
-            if let statement = program.statements.first {
+            if let statement = setup(input: e.0).first {
                 checkLetStatment(stmt: statement, name: e.1)
                 if let letStatement = statement as? LetStatement {
                     checkLiteralExpression(exp: letStatement.value, v: e.2)
@@ -69,14 +73,7 @@ final class parser_tests: XCTestCase {
         ]
         
         for e in expected {
-            let l = Lexer(input: e.0)
-            let p = Parser(lexer: l)
-            let program = p.parseProgram()
-            checkParserErrors(p: p)
-            
-            XCTAssertEqual(program.statements.count, 1)
-            
-            guard let returnStmt = program.statements.first as? ReturnStatement else {
+            guard let returnStmt = setup(input: e.0).first as? ReturnStatement else {
                 XCTFail()
                 return
             }
@@ -87,16 +84,8 @@ final class parser_tests: XCTestCase {
     }
     
     func testIdentifierExpession() {
-        let input = "foobar;"
-        
-        let l = Lexer(input: input)
-        let p = Parser(lexer: l)
-        let program = p.parseProgram()
-        checkParserErrors(p: p)
-        
-        XCTAssertEqual(program.statements.count, 1)
-        
-        guard let stmt = program.statements.first as? ExpressionStatement else {
+                
+        guard let stmt = setup(input: "foobar;").first as? ExpressionStatement else {
             XCTFail()
             return
         }
@@ -108,5 +97,20 @@ final class parser_tests: XCTestCase {
         
         XCTAssertEqual(ident.value, "foobar")
         XCTAssertEqual(ident.tokenLiteral(), "foobar")
+    }
+    
+    func testIntegerLiteral() {
+        guard let stmt = setup(input: "5;").first as? ExpressionStatement else {
+            XCTFail()
+            return
+        }
+        
+        guard let lit = stmt.expression as? IntegerLiteral else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(lit.value, 5)
+        XCTAssertEqual(lit.tokenLiteral(), "5")
     }
 }
