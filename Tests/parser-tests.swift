@@ -412,4 +412,41 @@ final class parser_tests: XCTestCase {
             }
         }
     }
+    
+    func testCallExpression() {
+        let input = "add(1, 2 * 3, 4 + 5);"
+        
+        guard let stmt = setup(input: input).first as? ExpressionStatement, let exp = stmt.expression as? CallExpression else {
+            XCTFail()
+            return
+        }
+        
+        checkIdentifier(exp: exp.fnExpression, value: "add")
+        XCTAssertEqual(exp.args?.count, 3)
+        checkLiteralExpression(exp: exp.args?[0], v: 1)
+        checkInfixExpressing(exp: exp.args?[1], left: 2, op: "*", right: 3)
+        checkInfixExpressing(exp: exp.args?[2], left: 4, op: "+", right: 5)
+    }
+    
+    func testCallExpressionArgParsing() {
+        let expected: [(String, String, [String])] = [
+            ("add()", "add", []),
+            ("add(1)", "add", ["1"]),
+            ("add(1, 2 * 3, 4 + 5)", "add", ["1", "(2 * 3)", "(4 + 5)"])
+        ]
+        
+        for e in expected {
+            guard let stmt = setup(input: e.0).first as? ExpressionStatement, let exp = stmt.expression as? CallExpression else {
+                XCTFail()
+                return
+            }
+            
+            checkIdentifier(exp: exp.fnExpression, value: e.1)
+            XCTAssertEqual(exp.args?.count, e.2.count)
+            
+            for (i, arg) in e.2.enumerated() {
+                XCTAssertEqual(exp.args?[i].string(), arg)
+            }
+        }
+    }
 }

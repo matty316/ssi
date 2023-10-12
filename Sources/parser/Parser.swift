@@ -56,6 +56,7 @@ class Parser {
         self.infixParseFns[.gt] = parseInfixExpression
         self.infixParseFns[.eq] = parseInfixExpression
         self.infixParseFns[.notEq] = parseInfixExpression
+        self.infixParseFns[.lParen] = parseCallExpression
     }
     
     func currentTokenIs(_ type: Token.TokenType) -> Bool {
@@ -348,5 +349,39 @@ class Parser {
         }
         
         return ids
+    }
+    
+    func parseCallExpression(fn: Expression?) -> Expression? {
+        let token = currentToken
+        let args = parseCallArgs()
+        return CallExpression(token: token, fnExpression: fn, args: args)
+    }
+    
+    func parseCallArgs() -> [Expression]? {
+        var args = [Expression]()
+        
+        if peekTokenIs(.rParen) {
+            nextToken()
+            return args
+        }
+        
+        nextToken()
+        if let e = parseExpression(precedence: .lowest) {
+            args.append(e)
+        }
+        
+        while peekTokenIs(.comma) {
+            nextToken()
+            nextToken()
+            if let e = parseExpression(precedence: .lowest) {
+                args.append(e)
+            }
+        }
+        
+        if !expectPeek(.rParen) {
+            return nil
+        }
+        
+        return args
     }
 }

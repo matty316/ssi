@@ -161,11 +161,11 @@ struct FunctionLiteral: Expression {
 
 struct CallExpression: Expression {
     var token: Token
-    var fnExpression: Expression
-    var args: [Expression]
+    var fnExpression: Expression?
+    var args: [Expression]?
     
     func string() -> String {
-        let argsString = args.map { $0.string() }.joined(separator: ", ")
-        return "\(fnExpression.string())(\(argsString))"
+        let argsString = args?.map { $0.string() }.joined(separator: ", ")
+        return "\(fnExpression?.string() ?? "")(\(argsString ?? ""))"
     }
 }
