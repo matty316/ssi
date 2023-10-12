@@ -24,8 +24,6 @@ struct Token {
         
         case lt = "<"
         case gt = ">"
-        case ltEq = "<="
-        case gtEq = ">="
         case eq = "=="
         case notEq = "!="
         
