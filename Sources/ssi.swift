@@ -9,6 +9,9 @@ import ArgumentParser
 @main
 struct ssi: ParsableCommand {
     mutating func run() throws {
-        print("Hello, world!")
+        print("hello! this is the saiyan programming language!")
+        print("feel free to type in commands")
+        
+        REPL().start()
     }
 }

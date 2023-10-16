@@ -34,7 +34,8 @@ extension Expression {
     func expressionNode() {}
 }
 
-struct Program {
+struct Program: Node {
+    var token: Token = Token(tokenType: .illegal, literal: "")
     var statements: [Statement]
     
     init() {
