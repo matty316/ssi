@@ -47,6 +47,8 @@ struct Evaluator {
                 return right
             }
             return evalInfix(op: infixExpr.operatorString, left: left, right: right)
+        case let boolLit as BooleanExpression:
+            return nativeBoolToObj(input: boolLit.value)
         default:
             return nil
         }
@@ -126,5 +128,12 @@ struct Evaluator {
         } else {
             return newError(message: "unknown operator: \(left?.objectType() ?? "") \(op) \(right?.objectType() ?? "")")
         }
+    }
+    
+    func nativeBoolToObj(input: Bool) -> Boolean {
+        if input {
+            return Evaluator.trueObj
+        }
+        return Evaluator.falseObj
     }
 }

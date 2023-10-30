@@ -18,13 +18,22 @@ final class eval_tests: XCTestCase {
         return Evaluator().eval(node: program, env: env)
     }
     
-    func checkIntObj(obj: Object, exp: Int) {
+    func checkIntObj(obj: Object?, exp: Int) {
         guard let intObj = obj as? Integer else {
             XCTFail()
             return
         }
         
         XCTAssertEqual(intObj.value, exp)
+    }
+    
+    func checkBool(obj: Object?, exp: Bool) {
+        guard let result = obj as? Boolean else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(result.value, exp)
     }
     
     func testEvalIntExpr() {
@@ -47,7 +56,19 @@ final class eval_tests: XCTestCase {
         ]
         for e in exp {
             let eval = checkEval(input: e.0)
-            checkIntObj(obj: eval!, exp: e.1)
+            checkIntObj(obj: eval, exp: e.1)
+        }
+    }
+    
+    func testEvalBools() {
+        let tests = [
+            ("true", true),
+            ("false", false),
+        ]
+        
+        for t in tests {
+            let eval = checkEval(input: t.0)
+            checkBool(obj: eval, exp: t.1)
         }
     }
 }
